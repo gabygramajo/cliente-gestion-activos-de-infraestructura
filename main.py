@@ -1,6 +1,15 @@
+import os
 import requests
+from dotenv import load_dotenv
 
-WEBHOOK_URL = "http://localhost:5678/webhook-test/agent-sql-query"
+# Cargar el archivo .env
+load_dotenv()
+
+# Leer la variable del entorno
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+
+if not WEBHOOK_URL:
+    raise ValueError("❌ ERROR: No se encontró 'WEBHOOK_URL' en el archivo .env")
 
 def enviar_mensaje(mensaje):
     """
