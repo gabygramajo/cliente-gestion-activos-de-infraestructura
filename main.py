@@ -2,59 +2,64 @@ import os
 import requests
 from dotenv import load_dotenv
 
-# Cargar el archivo .env
 load_dotenv()
 
-# Leer la variable del entorno
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 if not WEBHOOK_URL:
     raise ValueError("❌ ERROR: No se encontró 'WEBHOOK_URL' en el archivo .env")
 
-def enviar_mensaje(mensaje):
+def enviar_mensaje(mensaje, action="query_only", destino=None):
     """
-    Envía un mensaje al Webhook de n8n y devuelve la respuesta JSON.
+    Envía una solicitud al Webhook de n8n con acción definida.
     """
-    headers = {
-        "Content-Type": "application/json"
-    }
-
     data = {
-        "mensaje": mensaje
+        "action": action,        # query_only | query_csv | query_gmail | query_drive
+        "message": mensaje
     }
 
+    if destino:
+        data["destination"] = destino
+
+    headers = {"Content-Type": "application/json"}
     response = requests.post(WEBHOOK_URL, json=data, headers=headers)
 
-    # Mostrar el estado HTTP
-    print(f"\n➡️ Código de respuesta HTTP: {response.status_code}")
-
+    print(f"\n➡️   HTTP {response.status_code}")
     try:
-        # Intentamos convertir la respuesta a JSON
-        respuesta_json = response.json()
-        print("\n✅ Respuesta JSON recibida del servidor:")
-        print(respuesta_json)
-
-        # Acceder a los datos específicos
-        if "data" in respuesta_json:
-            print("\n📩 Mensaje del Agente:")
-            print(respuesta_json["data"])
-        else:
-            print("\n⚠️ No se encontró el campo 'data' en la respuesta")
-
-    except Exception as e:
-        print("\n❌ Error al interpretar la respuesta como JSON:")
+        print("\n✅ Respuesta:")
+        print(response.json())
+    except Exception:
         print(response.text)
-        print(e)
+
+
+def menu():
+    print("\n=== 💻 Agente de Activos - Cliente Python ===")
+    print("1. Consulta normal (texto)")
+    print("2. Generar CSV (descarga)")
+    print("3. Enviar por Gmail")
+    print("4. Subir a Google Drive")
+    print("5. Salir")
+
+    while True:
+        opcion = input("\n👉 Elegí una opción (1-5): ").strip()
+        if opcion == "5":
+            print("\n👋 Saliendo...")
+            break
+
+        mensaje = input("💬 Escribí tu consulta: ")
+
+        if opcion == "1":
+            enviar_mensaje(mensaje, "query_only")
+        elif opcion == "2":
+            enviar_mensaje(mensaje, "query_csv")
+        elif opcion == "3":
+            destino = input("📧 Correo destino: ")
+            enviar_mensaje(mensaje, "query_gmail", destino)
+        elif opcion == "4":
+            enviar_mensaje(mensaje, "query_drive")
+        else:
+            print("⚠️ Opción inválida")
 
 
 if __name__ == "__main__":
-    print("=== Cliente Python para Webhook de n8n ===")
-
-    while True:
-        mensaje = input("\n💬 Ingresá tu mensaje (o escribe 'salir' para terminar): ")
-
-        if mensaje.lower() == "salir":
-            print("\n👋 Saliendo del programa...")
-            break
-
-        enviar_mensaje(mensaje)
+    menu()
