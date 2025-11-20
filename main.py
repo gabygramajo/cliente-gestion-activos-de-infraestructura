@@ -28,13 +28,13 @@ if WEBHOOK_USER and WEBHOOK_PASS:
 
 def mostrar_menu():
     print("\n")
-    print("╔══════════════════════════════════════════════════╗")
-    print("║        💻 AGENTE INTELIGENTE DE ACTIVOS          ║")
-    print("╚══════════════════════════════════════════════════╝\n")
+    print("╔════════════════════════════════════════════════════════════╗")
+    print("║      💻  InfraQuery — Agente Inteligente de Activos        ║")
+    print("╚════════════════════════════════════════════════════════════╝\n")
     
     print("📌 Seleccioná una opción:")
     print("1️⃣  Consulta normal (texto)")
-    print("2️⃣  Generar Excel (guardar en Descargas)")
+    print("2️⃣  Generar Excel (guardar de manera local)")
     print("3️⃣  Enviar reporte por Gmail")
     print("4️⃣  Subir reporte a Google Drive")
     print("5️⃣  Salir")
@@ -51,7 +51,7 @@ def enviar_mensaje(mensaje, action="query_only", destino=None):
 
     headers = {"Content-Type": "application/json"}
 
-    print("\n🤖 Procesando tu solicitud...")
+    print("\n🤖 Procesando tu solicitud...\n")
     try:
         response = requests.post(WEBHOOK_PRODUCTION, json=data, headers=headers, auth=auth, timeout=60)
     except requests.exceptions.RequestException as e:
@@ -74,16 +74,10 @@ def enviar_mensaje(mensaje, action="query_only", destino=None):
     if action == "query_only":
         try:
             res_json = response.json()
-            if isinstance(res_json, dict) and "result" in res_json:
-                print("\n📋 Resultado:\n", res_json["result"])
-                
-            elif isinstance(res_json, list):
-                df = pd.DataFrame(res_json)
-                print("\n📊 Resultados:\n")
-                print(df.to_string(index=False))
-                
-            else:
-                print(json.dumps(res_json, indent=2, ensure_ascii=False))
+
+            print(f"🤖 {res_json["mensaje"]}")
+            df = pd.json_normalize(res_json["data"])
+            print(df.to_string(index=False))
                 
         except Exception:
             print("⚠ Respuesta no JSON:\n", response.text)
@@ -94,9 +88,12 @@ def enviar_mensaje(mensaje, action="query_only", destino=None):
     # ---------------------------------------------------------
     
     elif action == "query_csv":
+        
         if "application/vnd.openxmlformats" in content_type:
             download_dir = Path.home() / "Downloads"
-            filename = download_dir / "reporte_activos.xlsx"
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
+            filename = download_dir / f"reporte_{timestamp}.xlsx"
+
             try:
                 with open(filename, "wb") as f:
                     f.write(response.content)
@@ -162,7 +159,7 @@ def iniciar_aplicacion():
         
         if opcion == "5":
             print("\n👋 ¡Gracias por usar el Agente Inteligente!")
-            print("👋 Saliendo...")
+            print("👋 Saliendo...\n")
             break
 
         mensaje = input("💬 Escribí tu consulta: ").strip()
