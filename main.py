@@ -1,8 +1,9 @@
 import os
 import io
 import json
+import re
 import pandas as pd
-import requests 
+import requests
 from pathlib import Path
 from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
@@ -10,12 +11,9 @@ from datetime import datetime
 
 load_dotenv()
 
-WEBHOOK_PRODUCTION = os.getenv("WEBHOOK_PRODUCTION")
+WEBHOOK_URL = os.getenv("WEBHOOK_PRODUCTION")
 WEBHOOK_USER = os.getenv("WEBHOOK_USER")
 WEBHOOK_PASS = os.getenv("WEBHOOK_PASS")
-
-if not WEBHOOK_PRODUCTION:
-    raise ValueError("❌ ERROR: No se encontró 'WEBHOOK_PRODUCTION' en el archivo .env")
 
 auth = None
 if WEBHOOK_USER and WEBHOOK_PASS:
@@ -23,175 +21,169 @@ if WEBHOOK_USER and WEBHOOK_PASS:
 
 
 # ---------------------------------------------------------
-# 🔹 INTERFAZ DEL MENÚ ESTÉTICA
+#  Limpia texto ↔ intenta extraer JSON
 # ---------------------------------------------------------
+def extraer_json(texto):
+    if not isinstance(texto, str):
+        return None
 
-def mostrar_menu():
+    texto = texto.replace("```json", "").replace("```", "").strip()
+
+    # Intento directo
+    try:
+        return json.loads(texto)
+    except:
+        pass
+
+    # Buscar bloque JSON dentro del texto
+    match = re.search(r"\{[\s\S]*\}", texto)
+    if match:
+        try:
+            return json.loads(match.group(0))
+        except:
+            pass
+
+    return None
+
+
+# ---------------------------------------------------------
+#  Interfaz estética
+# ---------------------------------------------------------
+def mostrar_banner():
     print("\n")
-    print("╔════════════════════════════════════════════════════════════╗")
-    print("║      💻  InfraQuery — Agente Inteligente de Activos        ║")
-    print("╚════════════════════════════════════════════════════════════╝\n")
-    
-    print("📌 Seleccioná una opción:")
-    print("1️⃣  Consulta normal (texto)")
-    print("2️⃣  Generar Excel (guardar de manera local)")
-    print("3️⃣  Enviar reporte por Gmail")
-    print("4️⃣  Subir reporte a Google Drive")
-    print("5️⃣  Salir")
+    print("╔════════════════════════════════════════╗")
+    print("║     🧠 SIRA – Agente Inteligente       ║")
+    print("╚════════════════════════════════════════╝\n")
 
-# ---------------------------------------------------------------------------
-# 🔹 FUNCIÓN PRINCIPAL DE ENVÍO de consulta a n8n y mostrado de resultados
-# ---------------------------------------------------------------------------
 
-def enviar_mensaje(mensaje, action="query_only", destino=None):
-   
-    data = {"action": action, "message": mensaje}
-    if destino:
-        data["destination"] = destino
+# ---------------------------------------------------------
+#  Manejo de respuestas de n8n
+# ---------------------------------------------------------
+def procesar_respuesta(resp):
 
-    headers = {"Content-Type": "application/json"}
+    content_type = resp.headers.get("Content-Type", "")
+    raw_text = resp.text.strip()
+
+    # -----------------------------------
+    # CASO EXCEL BINARIO
+    # -----------------------------------
+    if "application/vnd.openxmlformats" in content_type:
+
+        download_dir = Path.home() / "Downloads"
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
+        filepath = download_dir / f"reporte_{timestamp}.xlsx"
+
+        try:
+            with open(filepath, "wb") as f:
+                f.write(resp.content)
+
+            print("\n✅ Archivo descargado correctamente:")
+            print(f"📁 {filepath}\n")
+
+            try:
+                df = pd.read_excel(io.BytesIO(resp.content))
+                print("📊 Vista previa:")
+                print(df.head(10).to_string(index=False))
+            except:
+                print("⚠ No se pudo mostrar la vista previa del Excel.")
+
+        except Exception as e:
+            print(f"❌ Error al guardar el archivo: {e}")
+
+        return
+
+    # -----------------------------------
+    # CASO JSON PURO
+    # -----------------------------------
+    if "application/json" in content_type:
+        try:
+            data = resp.json()
+            return mostrar_mensaje_inteligente(data)
+        except:
+            pass
+
+    # -----------------------------------
+    # TEXTO → intentar JSON
+    # -----------------------------------
+    posible = extraer_json(raw_text)
+    if posible:
+        return mostrar_mensaje_inteligente(posible)
+
+    # -----------------------------------
+    # TEXTO SIMPLE (fallback)
+    # -----------------------------------
+    print("\n💬 Respuesta del servidor:")
+    print(raw_text)
+
+    # detección de acciones
+    if "gmail" in raw_text.lower():
+        print("📧 El correo fue enviado correctamente.")
+    if "drive" in raw_text.lower():
+        print("☁ Archivo subido a Drive.")
+
+    return
+
+
+# ---------------------------------------------------------
+#  Mostrar JSON del agente de manera más linda
+# ---------------------------------------------------------
+def mostrar_mensaje_inteligente(data):
+
+    mensaje = data.get("mensaje") or data.get("mensaje:") or None
+
+    if mensaje:
+        print("\n🤖", mensaje, "\n")
+
+    # Si hay enlace a Drive
+    if data.get("webViewLink"):
+        print("🔗 Enlace Drive:", data["webViewLink"])
+
+    # Si hay datos tipo tabla
+    if isinstance(data.get("data"), list):
+        df = pd.json_normalize(data["data"])
+        print(df.to_string(index=False))
+
+    return
+
+
+# ---------------------------------------------------------
+#  Enviar mensaje
+# ---------------------------------------------------------
+def enviar_mensaje(texto_usuario):
 
     print("\n🤖 Procesando tu solicitud...\n")
+
     try:
-        response = requests.post(WEBHOOK_PRODUCTION, json=data, headers=headers, auth=auth, timeout=60)
-    except requests.exceptions.RequestException as e:
+        resp = requests.post(
+            WEBHOOK_URL,
+            json={"message": texto_usuario},
+            auth=auth,
+            timeout=60
+        )
+    except Exception as e:
         print(f"❌ Error de conexión: {e}")
         return
 
-    #print(f"📡 Respuesta HTTP {response.status_code}")
-
-    if response.status_code >= 400:
-        print("❌ Error HTTP:", response.text)
-        return
-
-    content_type = response.headers.get("Content-Type", "")
-
-
-    # ---------------------------------------------------------
-    # 🔹 1) CONSULTA NORMAL
-    # ---------------------------------------------------------
-    
-    if action == "query_only":
-        try:
-            res_json = response.json()
-
-            print(f"🤖 {res_json["mensaje"]}")
-            df = pd.json_normalize(res_json["data"])
-            print(df.to_string(index=False))
-                
-        except Exception:
-            print("⚠ Respuesta no JSON:\n", response.text)
-
-
-    # ---------------------------------------------------------
-    # 🔹 2) DESCARGA DE EXCEL
-    # ---------------------------------------------------------
-    
-    elif action == "query_csv":
-        
-        if "application/vnd.openxmlformats" in content_type:
-            download_dir = Path.home() / "Downloads"
-            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
-            filename = download_dir / f"reporte_{timestamp}.xlsx"
-
-            try:
-                with open(filename, "wb") as f:
-                    f.write(response.content)
-                print(f"\n✅ Archivo guardado en: ")
-                print(f"📁 {filename}")
-                
-                df = pd.read_excel(io.BytesIO(response.content))
-                print("\n📊 Vista previa del reporte:\n")
-                print(df.head(10).to_string(index=False))
-                
-            except Exception as e:
-                print("❌ Error al guardar o leer el archivo:", e)
-        else:
-            print("⚠ Tipo de contenido inesperado:", content_type)
-
-
-    # ---------------------------------------------------------
-    # 🔹 3) GMAIL
-    # ---------------------------------------------------------
-    
-    elif action == "query_gmail":
-        print("\n📧 Reporte enviado por Gmail con éxito.")
-        try:
-            data = response.json()
-            print("📬 Verificá tu bandeja de entrada.")
-        except Exception:
-            print(response.text)
-            
-    # ---------------------------------------------------------
-    # 🔹 4) GOOGLE DRIVE
-    # ---------------------------------------------------------
-    
-    elif action == "query_drive":
-        print("\n☁ Reporte subido a Google Drive con éxito.")
-        
-        try:
-            drive_data = response.json()
-            name = drive_data.get("name", "reporte.xlsx")
-            link = drive_data.get("webViewLink", "")
-                
-            print(f"📁 Nombre del archivo: {name}")
-            if link:
-                print(f"🔗 Enlace para abrirlo: {link}")
-                
-        except Exception:
-            print("⚠ No se pudo interpretar la respuesta del Drive.")
-            print(response.text)
-
-    else:
-        print("\n⚠ Acción desconocida.")
-        print(response.text)
+    procesar_respuesta(resp)
 
 
 # ---------------------------------------------------------
-# 🔹 MENÚ PRINCIPAL
+#  LOOP PRINCIPAL DEL AGENTE
 # ---------------------------------------------------------
+def iniciar():
 
-def iniciar_aplicacion():
+    mostrar_banner()
 
     while True:
-        mostrar_menu()
-        opcion = input("\n👉 Elegí una opción (1-5): ").strip()
-        
-        if opcion == "5":
+        consulta = input("💬 Escribí tu consulta (o 'salir'): ").strip()
+
+        if consulta.lower() == "salir":
             print("\n👋 ¡Gracias por usar el Agente Inteligente!")
             print("👋 Saliendo...\n")
             break
 
-        mensaje = input("💬 Escribí tu consulta: ").strip()
-        
-        if not mensaje:
-            print("⚠ Ingresá una consulta válida.")
-            continue
+        enviar_mensaje(consulta)
 
-        if opcion == "1":
-            enviar_mensaje(mensaje, "query_only")
-        
-        elif opcion == "2":
-            enviar_mensaje(mensaje, "query_csv")
-        
-        elif opcion == "3":
-            destino = input("📧 Ingresá el correo destino: ").strip()
-            if not destino:
-                print("⚠ Correo destino requerido.")
-                continue
-            enviar_mensaje(mensaje, "query_gmail", destino)
-        
-        elif opcion == "4":
-            enviar_mensaje(mensaje, "query_drive")
-        
-        else:
-            print("⚠ Opción inválida")
-        
-# ---------------------------------------------------------
-# 🔹 EJECUCIÓN
-# ---------------------------------------------------------
+
 if __name__ == "__main__":
-    try:
-        iniciar_aplicacion()
-    except KeyboardInterrupt:
-        print("\n\n👋 Programa finalizado por el usuario.")
+    iniciar()
