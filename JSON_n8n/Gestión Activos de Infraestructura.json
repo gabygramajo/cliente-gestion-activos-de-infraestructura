@@ -1,0 +1,1029 @@
+{
+  "name": "Gestión Activos de Infraestructura v5",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -1712,
+        48
+      ],
+      "id": "33a5402a-3826-4cd0-ab12-5122ef237672",
+      "name": "Chat Trigger",
+      "webhookId": "chat-webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agent-sql-query",
+        "authentication": "basicAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1712,
+        320
+      ],
+      "id": "67d6f134-b4a4-492e-b477-1157fba6c8c7",
+      "name": "Webhook POST",
+      "webhookId": "b79b4795-2c31-49c5-ae54-7282d31f62aa",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "H2qr0iN51Z5uiQWy",
+          "name": "agent-sql"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "input-assign",
+              "name": "chatInput",
+              "value": "={{ $json.body?.message || $json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "session-assign",
+              "name": "sessionId",
+              "value": "={{ $json.body?.sessionId || $json.sessionId || 'session_default' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1424,
+        176
+      ],
+      "id": "c88f032f-d42e-416e-bd7d-e193fd8717e2",
+      "name": "Edit Fields (Normalize)"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        464
+      ],
+      "id": "00c3e5f3-adad-4d28-8c49-8e71d6be0e74",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "i6gEmNkz4Rq3sGLW",
+          "name": "AgenteLLMGemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Edit Fields (Normalize)').item.json.sessionId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -960,
+        480
+      ],
+      "id": "e08a59f7-fb42-4c1e-9888-aee41d74081a",
+      "name": "Window Buffer Memory"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{$fromAI('query')}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        -800,
+        480
+      ],
+      "id": "1dbb250d-0b67-4cea-acfe-c47071da49af",
+      "name": "Postgres_Tool",
+      "credentials": {
+        "postgres": {
+          "id": "39GeIRhL6JOWmV4A",
+          "name": "Postgres-Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-command",
+              "leftValue": "={{ $json.isCommand }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        176
+      ],
+      "id": "6df86fb5-5c37-4af3-8577-bdce7a954450",
+      "name": "Is Command?"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        144,
+        512
+      ],
+      "id": "b2776861-32c1-4c6b-99a2-ff63dc76a27f",
+      "name": "Respond: Texto"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "{{ $json.sql }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -96,
+        48
+      ],
+      "id": "c426f07d-e092-409c-ae67-27ae7b211fda",
+      "name": "Execute SQL Full",
+      "credentials": {
+        "postgres": {
+          "id": "39GeIRhL6JOWmV4A",
+          "name": "Postgres-Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "reporte",
+        "options": {
+          "fileName": "={{ $('Json Parser').item.json.nombre_archivo.concat($now.toFormat('-yyyy-MM-dd_HH-mm')) }}.xlsx"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        160,
+        48
+      ],
+      "id": "3643299d-e5de-4177-9bad-3b39561f2cdb",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-drive",
+              "leftValue": "={{ $('Json Parser').first().json.accion.includes(\"drive\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        512,
+        48
+      ],
+      "id": "015df8e7-8210-4b04-bc99-dfaae939963f",
+      "name": "If Drive"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-email",
+              "leftValue": "={{ $('Json Parser').first().json.accion.includes(\"email\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        512,
+        192
+      ],
+      "id": "79b83335-382c-437e-ad80-8ac1c0274793",
+      "name": "If Email"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "reporte",
+        "name": "={{ $('Json Parser').first().json.nombre_archivo }}.xlsx",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        960,
+        32
+      ],
+      "id": "eb2c7cfc-4cbd-4cdb-aae0-3eaa94ed48a6",
+      "name": "Upload Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "7ieIbzHWiXkEsZFR",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Json Parser').first().json.destino_email }}",
+        "subject": "={{ $('Json Parser').item.json.asunto }}",
+        "message": "={{ $('Json Parser').item.json.mesajecorreo }}",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "reporte"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        176
+      ],
+      "id": "5ed6b5af-7766-404e-8fa5-c6fdbe9d3369",
+      "name": "Send Gmail",
+      "webhookId": "7aaafca6-d4cd-4240-9378-50520c5e5a6c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bDj3JDYVRUoNzOhJ",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-download",
+              "leftValue": "={{ $('Json Parser').first().json.accion.includes(\"download\") }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        512,
+        512
+      ],
+      "id": "67df46b7-2099-43bf-9ce2-e78b8000d8fc",
+      "name": "If Download"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2016,
+        496
+      ],
+      "id": "bcbaae34-b580-4e79-8377-e5ce91a77c49",
+      "name": "Respond: Binary"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2016,
+        208
+      ],
+      "id": "6f5014d8-2831-497c-994d-af25a3d5de73",
+      "name": "Respond: OK"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        832,
+        816
+      ],
+      "id": "ea2ca87a-3dc1-4493-9fe8-3e74987e59bb",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "content": "## BLOQUE 1: Entrada y Normalización\n### Chat Trigger & Webhook \n- POST: Puntos de entrada duales. Permiten invocar el flujo desde la interfaz de chat de n8n o vía API (Python) respectivamente.\n### Edit Fields (Normalize)\n- Estandariza la entrada. Unifica message (API) y chatInput (Chat) en una sola variable chatInput. Asigna un sessionId para mantener la memoria de la conversación.",
+        "height": 896,
+        "width": 656,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1840,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "ab9decc6-f284-4f41-8d50-1f9b18b34093",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## BLOQUE 2: Núcleo de IA (Agente SIRA)\n### SIRA (AI Agent): El cerebro del sistema.\n\n- Utiliza Google Gemini como modelo de lenguaje.\n\n- Tiene acceso a Postgres_Tool para consultar la base de datos real.\n\n- Mantiene el contexto con Window Buffer Memory.\n\n- Decide si responder con texto plano (Chat) o generar un JSON estructurado de comando (Reportes).",
+        "height": 896,
+        "width": 480,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1168,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "346175b6-b510-4967-a21c-cacdb3b3e8bc",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## BLOQUE 3: Enrutador Inteligente\n### Json  Parser (Code): \nAnaliza la respuesta de la IA. Detecta si es un JSON de comando (tipo: \"comando\") o texto conversacional.\n\n### Is Command? (If): \n- Bifurca el flujo:\n        - False (Chat): Envía la respuesta de texto directamente al usuario.\n        - True (Comando): Inicia el proceso de generación de reportes",
+        "height": 896,
+        "width": 480,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -672,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "f7c0e5ea-06b8-49b7-a960-96d73ace43f9",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## BLOQUE 5: Chat Salida \n### Format the outgoing chat message (Set)\n- Construye el JSON final de respuestas con los detalles de la consulta realizada.\n#### Respond: Texto\n- Devuelve la respuesta conversacional al chat.",
+        "height": 416,
+        "width": 544,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -176,
+        288
+      ],
+      "typeVersion": 1,
+      "id": "887ed6d2-470b-495c-8e12-808baa2835e7",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## BLOQUE 4: Ejecución de Datos (Rama Comando)\n\n### Execute SQL Full: \n- Ejecuta la consulta SQL (SELECT) generada por el agente para obtener los datos crudos del reporte.\n\n### Convert to File: \n- Transforma los datos JSON de la base de datos en un archivo Excel (.xlsx) con nombre dinámico.",
+        "height": 496,
+        "width": 544,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -176,
+        -240
+      ],
+      "typeVersion": 1,
+      "id": "f0ef378a-e0b9-4e6b-8e63-75727e976b77",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## BLOQUE 6: Acciones Paralelas\n### If Email\n- Verifica si la acción incluye \"email\". Si es así, envía el reporte adjunto por Gmail.\n\n### If Drive\n- Verifica si la acción incluye \"drive\". Si es así, sube el reporte a la carpeta raíz de Google Drive.\n\n### If no Download \n- Verifica si la acción No incluye \"download\". Para así, poder utilizar los campos internos del json cuando son requeridos y no interferir en el envío del archivo binario.\n\n### If Download \n- Verifica si la acción incluye \"download\". Si es así, prepara el binario para descarga directa.",
+        "height": 1072,
+        "width": 784,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        384,
+        -368
+      ],
+      "typeVersion": 1,
+      "id": "a38bde07-f1d3-4105-86a0-f736a066e7cc",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## BLOQUE 7: Unificación de Respuestas\n### Merge Message (Merge)\nEspera a que terminen las acciones de Email y Drive (si se activaron).\n\n### Merge output fields (Aggregate) \nRecopila los metadatos de éxito (links de Drive, IDs de correo) de todas las ramas ejecutadas.\n\n### Formatear mensaje (Set):\nConstruye el JSON final de confirmación con los detalles de las acciones realizadas.",
+        "height": 864,
+        "width": 656,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1184,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "ea87c350-bf5b-4248-adf0-76f951a2aa7d",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## No Operation, do nothing\n",
+        "height": 256,
+        "width": 768,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        720
+      ],
+      "typeVersion": 1,
+      "id": "1e9e4c68-5b00-411d-8e11-92b54f281149",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Edit Fields (Normalize)').item.json.chatInput }}",
+        "options": {
+          "systemMessage": "=Eres \"SIRA\" (Sistema Inteligente de Reportes Automatizados), un Asistente de Infraestructura Híbrido.\nTu objetivo es ayudar a los usuarios a gestionar activos de TI mediante consultas directas a la base de datos o generando comandos para crear reportes (Excel, Email, Drive).\n\n# TUS DOS MODOS DE OPERACIÓN:\n\n1. MODO CHAT (Consultas y Conversación):\n   - SI el usuario saluda: Responde cordialmente y ofrece ayuda inmediata. (Ej: \"¡Hola! Soy SIRA. ¿Qué reporte o consulta necesitas hoy?\").\n   - SI falta información crítica (ej. pide email sin destinatario): NO generes el comando. Pregunta amablemente por el dato faltante.\n   - SI es una pregunta directa (\"¿Cuántos activos hay?\"): USA LA HERRAMIENTA \"Postgres_Tool\", consulta la DB y responde en lenguaje natural.\n\nPROTOCOLO JSON (Solo para Modo CHAT):\n{\n  \"tipo\": \"chat\",\n  \"mensaje\": \"Texto de respuesta amigable\"\n}\n\n2. MODO COMANDO (Generación de Archivos/Acciones):\n   - ACTÍVALO SOLO SI el usuario pide explícitamente: crear reporte, archivo, excel, enviar por correo o guardar en drive.\n   - Genera un JSON estricto con la estructura de abajo.\n\nPROTOCOLO JSON (Solo para Modo Comando):\n{\n  \"tipo\": \"comando\",\n  \"mensaje\": \"Genial. Ya he generado el [nombre del reporte] y [acción realizada]. ¿Necesitas que realice alguna otra acción?\",\n  \"sql\": \"SELECT ...\",\n  \"accion\": \"email\" | \"drive\" | \"download\" (o combinados con coma),\n  \"destino_email\": \"correo@...\" | null,\n  \"nombre_archivo\": \"nombre_sugerido_sin_extension\",\n  \"asunto\": \"SIRA: Reporte Generado: [Título Descriptivo]\",\n  \"mesajecorreo\": \"Hola Estimado/a,\\n\\nEspero que estés teniendo un excelente día.\\nAquí te comparto el reporte actualizado con [Descripción del reporte].\\n\\nQuedo a la espera de sus próximas solicitudes.\\n\\nSaludos cordiales,\\nSIRA (Sistema Inteligente de Reportes Automatizados)\"\n}\n\n# REGLAS DE SQL Y VISTAS (PRIORIDAD ALTA)\nPara optimizar las consultas, DEBES priorizar el uso de las siguientes VISTAS pre-construidas en lugar de hacer JOINs manuales complejos.\nUsa comillas dobles para tablas y columnas (UpperCamelCase).\n\n- vw_historial_mantenimiento (\"IdTicketMantenimiento\", \"Activo\" --Nombre del activo, \"FechaMantenimiento\" -- yyyy-mm-dd, \"Anio\", \"Descripcion\", \"Tipo\", IdEmpleado\", \"TecnicoResponsable\" --Nombre y Apellido del empleado )\n- vw_mantenimiento_semestral (igual que vw_historial_mantenimiento)\n- vw_mantenimiento_trimestral (igual que vw_historial_mantenimiento)\n- vw_activos_completo (\"IdActivo\", \"NombreActivo\", \"NombreCategoria\", \"Estado\", \"Importancia\", \"Confidencialidad\", \"FechaDeAdquisicion\", \"FechaDeVencimiento\", \"EstadoGarantia\")\n- vw_activos_por_departamento (\"IdDepartamento\", \"Departamento\", \"NombreCategoria\", \"Activo\", \"EmpleadoResponsable\", \"FechaAsignacion\")\n- vw_asignaciones_actuales (\"IdActivo\", \"Activo\", \"NombreCategoria\",\"LegajoEmpleado\", \"Responsable\", \"Departamento\", \"FechaAsignacion\", \"DiasEnPosesion\")\n- vw_auditoria_licencias (\"IdLicencia\", \"Software\", \"TipoLicencia\", \"IdHardware\", \"InstaladoEn\", \"TipoHardware\", \"FechaInstalacion\")\n- vw_empleados_perfil (\"Legajo\", \"Nombre\", \"Apellido\", \"DNI\", \"NombreCompleto\", \"Puesto\", \"Departamento\", \"FechaAlta\",\"AntiguedadAnios\",\"EstadoEmpleado\")\n- vw_reporte_mensual (\"Mes\", \"TotalIncidentes\", \"TiposDeIncidentes\", \"TecnicosActivos\")\n- vw_resumen_mantenimiento (\"IdActivo\", \"NombreActivo\", \"CantidadDeFallas\", \"UltimaReparacion\", \"TiposDeProblemas\", \"UltimoTecnico\")\n\n# EJEMPLOS DE COMPORTAMIENTO\n\n## EJEMPLO 1 (Saludo):\nInput: \"Hola Sira\"\nRespuesta: { \"tipo\": \"chat\", \"mensaje\": \"¡Hola! Soy SIRA, tu asistente de infraestructura. ¿En qué puedo ayudarte hoy? Puedo generar reportes de activos, empleados o mantenimientos.\" }\n\n## EJEMPLO 2 (Falta Email):\nInput: \"Envíame la lista de notebooks por correo.\"\nRespuesta: { \"tipo\": \"chat\", \"mensaje\": \"Entendido, puedo generar ese reporte. ¿Podrías indicarme a qué dirección de correo electrónico debo enviarlo?\" }\n\n## EJEMPLO 3 (Comando Completo - Email):\nInput: \"Listame los 10 empleados más antiguos y envíalo a jefe@empresa.com\"\nRespuesta: {\n  \"tipo\": \"comando\",\n  \"mensaje\": \"Genial. Ya he generado el reporte de los 10 empleados más antiguos y se enviará a jefe@empresa.com. ¿Necesitas alguna otra gestión?\",\n  \"sql\": \"SELECT \\\"Nombre\\\", \\\"Apellido\\\", \\\"FechaAlta\\\" FROM \\\"vw_empleados_perfil\\\" ORDER BY \\\"FechaAlta\\\" ASC LIMIT 10\",\n  \"accion\": \"email\",\n  \"destino_email\": \"jefe@empresa.com\",\n  \"nombre_archivo\": \"top_10_empleados_antiguos\",\n  \"asunto\": \"SIRA: Reporte Generado: Top 10 Empleados por Antigüedad\",\n  \"mesajecorreo\": \"Hola Estimado/a,\\n\\nEspero que estés teniendo un excelente día.\\nAquí te comparto el reporte actualizado con el detalle de los 10 empleados de mayor antigüedad.\\n\\nQuedo a la espera de sus próximas solicitudes.\\n\\nSaludos cordiales,\\nSIRA\"\n}\n\n# ESQUEMA DE BASE DE DATOS (PostgreSQL - STRICT Case Sensitive)\nNOTA: Todas las tablas y columnas usan UpperCamelCase. DEBES usar comillas dobles siempre (ej: \"NombreColumna\").\n\n# ESQUEMA DE BASE DE DATOS\n\n## 1. Catálogos y Organización\nTable: \"Departamento\" (\"IdDepartamento\", \"Nombre\")\nTable: \"Puesto\" (\"IdPuesto\", \"Nombre\", \"IdDepartamento\") -- Relación: \"Puesto\".\"IdDepartamento\" -> \"Departamento.IdDepartamento\"\nTable: \"Categoria\" (\"IdCategoria\", \"NombreCategoria\") -- Ej: \"Notebook\", \"Monitor\", \"Licencia Windows\"\nTable: \"Estado\" (\"IdEstado\", \"Estado\") -- Ej: Activo, \"Inactivo\", \"Reposo\"\nTable: \"Importancia\" (\"IdImportancia\", \"Nivel\")\nTable: \"Confidencialidad\" (\"IdConfidencialidad\", \"Nivel\")\n\n## 2. Personas\nTable: \"Empleado\" (\"Legajo\", \"DNI\", \"Nombre\", \"Apellido\", \"Nacimiento\", \"FechaDeAlta\", \"FechaDeBaja\", \"IdPuesto\")\n-- Relación: \"Empleado\".\"IdPuesto\" -> \"Puesto\".\"IdPuesto\"\n\n## 3. Activos (Inventario)\nTable: \"Activos\" (\"IdActivo\", \"Nombre\", \"FechaDeAdquisicion\", \"FechaDeVencimiento\", \"IdCategoria\", \"IdEstado\", \"IdImportancia\", \"IdConfidencialidad\")\n-- Relaciones con catálogos correspondientes.\n\n## 4. Relaciones Clave\nTable: \"AsignacionEmpleado\" (\"IdActivo\", \"LegajoEmpleado\", \"FechaAsignacion\", \"FechaDevolucion\")\n-- Define quién tiene qué equipo.\n-- Si \"FechaDevolucion\" IS NULL, significa que el empleado TIENE el activo actualmente.\n-- Joins: \"\".IdActivo\" -> \"Activos\".\"IdActivo\", .\"LegajoEmpleado\" -> \"Empleado\".\"Legajo\"\n\nTable: InstalacionActivo (IdActivoHijo, IdActivoPadre, FechaInstalacion)\n-- Define qué software/licencia está instalado en qué equipo.\n-- \"IdActivoHijo\" es el Software (ej. Office 365).\n-- \"IdActivoPadre\" es el Hardware (ej. Notebook Dell).\n-- Joins: Ambos IDs apuntan a \"Activos\".\"IdActivo\".\n\nTable: \"Mantenimiento\" (\"IdTicketMantenimiento\", \"IdActivo\", \"FechaMantenimiento\", \"Descripcion\", \"Tipo\", \"IdEmpleado\")\n-- IdEmpleado refiere a quién realizó o supervisó el mantenimiento."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -1040,
+        176
+      ],
+      "id": "cf6d65c3-1ed4-4b4d-9b1e-5256335b58d1",
+      "name": "SIRA"
+    },
+    {
+      "parameters": {
+        "content": "## BLOQUE 9: Salida\n### Respond: OK\n- Devuelve el JSON de confirmación de acciones exitosas (Email/Drive).\n\n### Respond\n- Binary: Devuelve el archivo Excel físico para su descarga directa.",
+        "height": 800,
+        "width": 592,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1856,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "2cc179ca-a9ab-4f58-8f22-00c86b6052be",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Detectar si es JSON de Comando o Texto Conversacional\nconst output = $('SIRA').first().json.output;\n\ntry {\n  // Intentamos parsear. Si falla, es texto.\n  const cleanJson = output.replace(/```json/g, '').replace(/```/g, '');\n  const parsed = JSON.parse(cleanJson);\n  \n  if (parsed.tipo === 'comando') {\n    return { ...parsed, isCommand: true };\n  }\n  return { message: output, isCommand: false };\n} catch (e) {\n  return { message: output, isCommand: false };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        176
+      ],
+      "id": "7aacd53e-b144-4ab8-a04a-46b6a3de8185",
+      "name": "Json Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b041d12f-1acc-4a8c-8790-a4dcfd0bbf74",
+              "leftValue": "={{ $('Json Parser').first().json.accion.includes(\"download\") }}",
+              "rightValue": "\"drive\"",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        512,
+        352
+      ],
+      "id": "63932fee-eff9-4e8f-8c65-4d0eda4dfd5d",
+      "name": "if no Download"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1280,
+        192
+      ],
+      "id": "068798da-13df-407e-aa92-5590019e4ec9",
+      "name": "Merge Messages"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "webViewLink"
+            },
+            {
+              "fieldToAggregate": "labelIds[0]",
+              "renameField": true,
+              "outputFieldName": "mail"
+            },
+            {
+              "fieldToAggregate": "mensaje"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        208
+      ],
+      "id": "1d3ae0d3-1c6c-46dc-8619-0091258ea084",
+      "name": "Merge output fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6c2b6d32-184d-44b9-a71f-0a9583cc08d6",
+              "name": "webViewLink",
+              "value": "={{ $json.webViewLink[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "0fef9497-b707-45ac-bedf-d09720276b09",
+              "name": "mail",
+              "value": "={{ $json.mail[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "180a8a24-7dac-4dab-9bb2-f187c6b9cd4c",
+              "name": "mensaje",
+              "value": "={{ $json.mensaje[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "651cfc4c-b510-4a54-98e8-1ca649d172e7",
+              "name": "nombre_archivo",
+              "value": "={{ $('Json Parser').item.json.nombre_archivo.concat($now.toFormat('-yyyy-MM-dd_HH-mm')) }}.xlsx",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1680,
+        208
+      ],
+      "id": "dca11e97-4036-411f-9486-c8fcbd368c6f",
+      "name": "Format output message"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfec4e53-4d10-4437-8957-aad4aa4677b1",
+              "name": "mensaje:",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -96,
+        512
+      ],
+      "id": "56c4228d-8d45-4f7e-850b-d653e88faa58",
+      "name": "Format the outgoing chat message"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields (Normalize)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook POST": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields (Normalize)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields (Normalize)": {
+      "main": [
+        [
+          {
+            "node": "SIRA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "SIRA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "SIRA",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres_Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "SIRA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Command?": {
+      "main": [
+        [
+          {
+            "node": "Execute SQL Full",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "if no Download",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format the outgoing chat message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute SQL Full": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "If Drive",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If Download",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Drive": {
+      "main": [
+        [
+          {
+            "node": "Upload Drive",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Email": {
+      "main": [
+        [
+          {
+            "node": "Send Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Drive": {
+      "main": [
+        [
+          {
+            "node": "Merge Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Gmail": {
+      "main": [
+        [
+          {
+            "node": "Merge Messages",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "If Download": {
+      "main": [
+        [
+          {
+            "node": "Respond: Binary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SIRA": {
+      "main": [
+        [
+          {
+            "node": "Json Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Json Parser": {
+      "main": [
+        [
+          {
+            "node": "Is Command?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if no Download": {
+      "main": [
+        [
+          {
+            "node": "Merge Messages",
+            "type": "main",
+            "index": 2
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Messages": {
+      "main": [
+        [
+          {
+            "node": "Merge output fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge output fields": {
+      "main": [
+        [
+          {
+            "node": "Format output message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format output message": {
+      "main": [
+        [
+          {
+            "node": "Respond: OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format the outgoing chat message": {
+      "main": [
+        [
+          {
+            "node": "Respond: Texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "errorWorkflow": "Uo72O2Vu0ev3T9Yc",
+    "timezone": "America/Argentina/Buenos_Aires",
+    "executionTimeout": 60,
+    "timeSavedPerExecution": 1
+  },
+  "versionId": "6acd2a57-941f-45a7-8599-4ceeb3eefb0c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fe25a9664dfe6f248e9fd169eb5ab6b09ef922152222101fed7bc51c444c374b"
+  },
+  "id": "lz6zp2Co5wKLHvQq",
+  "tags": []
+}

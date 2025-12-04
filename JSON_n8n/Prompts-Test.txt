@@ -1,0 +1,46 @@
+## Conversación y Consultas Rápidas (Modo Chat)
+
+### Saludo Básico
+Hola Sira, ¿qué puedes hacer?
+
+### Consulta de Cantidad (Vista: vw_activos_completo):
+¿Cuántas notebooks tenemos actualmente en estado 'Activo'?
+
+### Consulta de Mantenimiento (Vista: vw_resumen_mantenimiento):
+¿Qué activos han tenido más de 3 fallas históricamente?
+
+### Consulta de Inventario por Área (Vista: vw_activos_por_departamento):
+Listame los activos asignados al departamento de Tecnología (IT).
+
+---------------------------------------------------------------------------------
+
+## Validación de Errores (Falta de Información)
+
+### Intento de Email sin dirección: vw_reporte_mensual
+Sira, necesito que me envíes por correo el listado de todos los empleados.
+
+---------------------------------------------------------------------------------
+
+## Nivel 3: Generación de Reportes (Modo Comando)
+### Descarga Local (Action: download)
+Genera un excel con el reporte mensual de incidentes para descargarlo ahora.
+
+### Solo Drive (Action: drive):vw_auditoria_licencias
+Guarda en el Google Drive un reporte de auditoría de todas las licencias de software instaladas
+
+### Solo Email (Action: email): vw_empleados_perfil
+Envíame por gmail a agenteia928@gmail.com el perfil de todos los empleados con su antigüedad.
+
+---------------------------------------------------------------------------------
+
+## Nivel 4: Comandos Complejos (Multicanal)
+
+### Email + Drive:
+Necesito un reporte completo de todos los mantenimientos realizados. Por favor, guárdalo en el Drive y también envíalo por correo a agenteia928@gmail.com.
+
+### Descarga + Email
+Quiero descargar el historial de mantenimientos de este año, pero también mándaselo a agenteia928@gmail.com para que les quede copia.
+
+### Descarga + Email + Drive
+Quiero descargar el historial de mantenimientos trimestral, pero también mándaselo a agenteia928@gmail.com y guardalo en google drive para que les quede copia.
+
