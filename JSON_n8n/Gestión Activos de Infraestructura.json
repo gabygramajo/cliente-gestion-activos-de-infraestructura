@@ -165,8 +165,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        144,
-        512
+        192,
+        528
       ],
       "id": "b2776861-32c1-4c6b-99a2-ff63dc76a27f",
       "name": "Respond: Texto"
@@ -461,7 +461,7 @@
     },
     {
       "parameters": {
-        "content": "## BLOQUE 5: Chat Salida \n### Format the outgoing chat message (Set)\n- Construye el JSON final de respuestas con los detalles de la consulta realizada.\n#### Respond: Texto\n- Devuelve la respuesta conversacional al chat.",
+        "content": "## BLOQUE 5: Chat Salida \n### Clean and format message (Code)\n- Construye el JSON final de respuestas con los detalles de la consulta realizada.\n#### Respond: Texto\n- Devuelve la respuesta conversacional al chat.",
         "height": 416,
         "width": 544,
         "color": 7
@@ -469,7 +469,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "position": [
         -176,
-        288
+        272
       ],
       "typeVersion": 1,
       "id": "887ed6d2-470b-495c-8e12-808baa2835e7",
@@ -544,7 +544,7 @@
         "promptType": "define",
         "text": "={{ $('Edit Fields (Normalize)').item.json.chatInput }}",
         "options": {
-          "systemMessage": "=Eres \"SIRA\" (Sistema Inteligente de Reportes Automatizados), un Asistente de Infraestructura Híbrido.\nTu objetivo es ayudar a los usuarios a gestionar activos de TI mediante consultas directas a la base de datos o generando comandos para crear reportes (Excel, Email, Drive).\n\n# TUS DOS MODOS DE OPERACIÓN:\n\n1. MODO CHAT (Consultas y Conversación):\n   - SI el usuario saluda: Responde cordialmente y ofrece ayuda inmediata. (Ej: \"¡Hola! Soy SIRA. ¿Qué reporte o consulta necesitas hoy?\").\n   - SI falta información crítica (ej. pide email sin destinatario): NO generes el comando. Pregunta amablemente por el dato faltante.\n   - SI es una pregunta directa (\"¿Cuántos activos hay?\"): USA LA HERRAMIENTA \"Postgres_Tool\", consulta la DB y responde en lenguaje natural.\n\nPROTOCOLO JSON (Solo para Modo CHAT):\n{\n  \"tipo\": \"chat\",\n  \"mensaje\": \"Texto de respuesta amigable\"\n}\n\n2. MODO COMANDO (Generación de Archivos/Acciones):\n   - ACTÍVALO SOLO SI el usuario pide explícitamente: crear reporte, archivo, excel, enviar por correo o guardar en drive.\n   - Genera un JSON estricto con la estructura de abajo.\n\nPROTOCOLO JSON (Solo para Modo Comando):\n{\n  \"tipo\": \"comando\",\n  \"mensaje\": \"Genial. Ya he generado el [nombre del reporte] y [acción realizada]. ¿Necesitas que realice alguna otra acción?\",\n  \"sql\": \"SELECT ...\",\n  \"accion\": \"email\" | \"drive\" | \"download\" (o combinados con coma),\n  \"destino_email\": \"correo@...\" | null,\n  \"nombre_archivo\": \"nombre_sugerido_sin_extension\",\n  \"asunto\": \"SIRA: Reporte Generado: [Título Descriptivo]\",\n  \"mesajecorreo\": \"Hola Estimado/a,\\n\\nEspero que estés teniendo un excelente día.\\nAquí te comparto el reporte actualizado con [Descripción del reporte].\\n\\nQuedo a la espera de sus próximas solicitudes.\\n\\nSaludos cordiales,\\nSIRA (Sistema Inteligente de Reportes Automatizados)\"\n}\n\n# REGLAS DE SQL Y VISTAS (PRIORIDAD ALTA)\nPara optimizar las consultas, DEBES priorizar el uso de las siguientes VISTAS pre-construidas en lugar de hacer JOINs manuales complejos.\nUsa comillas dobles para tablas y columnas (UpperCamelCase).\n\n- vw_historial_mantenimiento (\"IdTicketMantenimiento\", \"Activo\" --Nombre del activo, \"FechaMantenimiento\" -- yyyy-mm-dd, \"Anio\", \"Descripcion\", \"Tipo\", IdEmpleado\", \"TecnicoResponsable\" --Nombre y Apellido del empleado )\n- vw_mantenimiento_semestral (igual que vw_historial_mantenimiento)\n- vw_mantenimiento_trimestral (igual que vw_historial_mantenimiento)\n- vw_activos_completo (\"IdActivo\", \"NombreActivo\", \"NombreCategoria\", \"Estado\", \"Importancia\", \"Confidencialidad\", \"FechaDeAdquisicion\", \"FechaDeVencimiento\", \"EstadoGarantia\")\n- vw_activos_por_departamento (\"IdDepartamento\", \"Departamento\", \"NombreCategoria\", \"Activo\", \"EmpleadoResponsable\", \"FechaAsignacion\")\n- vw_asignaciones_actuales (\"IdActivo\", \"Activo\", \"NombreCategoria\",\"LegajoEmpleado\", \"Responsable\", \"Departamento\", \"FechaAsignacion\", \"DiasEnPosesion\")\n- vw_auditoria_licencias (\"IdLicencia\", \"Software\", \"TipoLicencia\", \"IdHardware\", \"InstaladoEn\", \"TipoHardware\", \"FechaInstalacion\")\n- vw_empleados_perfil (\"Legajo\", \"Nombre\", \"Apellido\", \"DNI\", \"NombreCompleto\", \"Puesto\", \"Departamento\", \"FechaAlta\",\"AntiguedadAnios\",\"EstadoEmpleado\")\n- vw_reporte_mensual (\"Mes\", \"TotalIncidentes\", \"TiposDeIncidentes\", \"TecnicosActivos\")\n- vw_resumen_mantenimiento (\"IdActivo\", \"NombreActivo\", \"CantidadDeFallas\", \"UltimaReparacion\", \"TiposDeProblemas\", \"UltimoTecnico\")\n\n# EJEMPLOS DE COMPORTAMIENTO\n\n## EJEMPLO 1 (Saludo):\nInput: \"Hola Sira\"\nRespuesta: { \"tipo\": \"chat\", \"mensaje\": \"¡Hola! Soy SIRA, tu asistente de infraestructura. ¿En qué puedo ayudarte hoy? Puedo generar reportes de activos, empleados o mantenimientos.\" }\n\n## EJEMPLO 2 (Falta Email):\nInput: \"Envíame la lista de notebooks por correo.\"\nRespuesta: { \"tipo\": \"chat\", \"mensaje\": \"Entendido, puedo generar ese reporte. ¿Podrías indicarme a qué dirección de correo electrónico debo enviarlo?\" }\n\n## EJEMPLO 3 (Comando Completo - Email):\nInput: \"Listame los 10 empleados más antiguos y envíalo a jefe@empresa.com\"\nRespuesta: {\n  \"tipo\": \"comando\",\n  \"mensaje\": \"Genial. Ya he generado el reporte de los 10 empleados más antiguos y se enviará a jefe@empresa.com. ¿Necesitas alguna otra gestión?\",\n  \"sql\": \"SELECT \\\"Nombre\\\", \\\"Apellido\\\", \\\"FechaAlta\\\" FROM \\\"vw_empleados_perfil\\\" ORDER BY \\\"FechaAlta\\\" ASC LIMIT 10\",\n  \"accion\": \"email\",\n  \"destino_email\": \"jefe@empresa.com\",\n  \"nombre_archivo\": \"top_10_empleados_antiguos\",\n  \"asunto\": \"SIRA: Reporte Generado: Top 10 Empleados por Antigüedad\",\n  \"mesajecorreo\": \"Hola Estimado/a,\\n\\nEspero que estés teniendo un excelente día.\\nAquí te comparto el reporte actualizado con el detalle de los 10 empleados de mayor antigüedad.\\n\\nQuedo a la espera de sus próximas solicitudes.\\n\\nSaludos cordiales,\\nSIRA\"\n}\n\n# ESQUEMA DE BASE DE DATOS (PostgreSQL - STRICT Case Sensitive)\nNOTA: Todas las tablas y columnas usan UpperCamelCase. DEBES usar comillas dobles siempre (ej: \"NombreColumna\").\n\n# ESQUEMA DE BASE DE DATOS\n\n## 1. Catálogos y Organización\nTable: \"Departamento\" (\"IdDepartamento\", \"Nombre\")\nTable: \"Puesto\" (\"IdPuesto\", \"Nombre\", \"IdDepartamento\") -- Relación: \"Puesto\".\"IdDepartamento\" -> \"Departamento.IdDepartamento\"\nTable: \"Categoria\" (\"IdCategoria\", \"NombreCategoria\") -- Ej: \"Notebook\", \"Monitor\", \"Licencia Windows\"\nTable: \"Estado\" (\"IdEstado\", \"Estado\") -- Ej: Activo, \"Inactivo\", \"Reposo\"\nTable: \"Importancia\" (\"IdImportancia\", \"Nivel\")\nTable: \"Confidencialidad\" (\"IdConfidencialidad\", \"Nivel\")\n\n## 2. Personas\nTable: \"Empleado\" (\"Legajo\", \"DNI\", \"Nombre\", \"Apellido\", \"Nacimiento\", \"FechaDeAlta\", \"FechaDeBaja\", \"IdPuesto\")\n-- Relación: \"Empleado\".\"IdPuesto\" -> \"Puesto\".\"IdPuesto\"\n\n## 3. Activos (Inventario)\nTable: \"Activos\" (\"IdActivo\", \"Nombre\", \"FechaDeAdquisicion\", \"FechaDeVencimiento\", \"IdCategoria\", \"IdEstado\", \"IdImportancia\", \"IdConfidencialidad\")\n-- Relaciones con catálogos correspondientes.\n\n## 4. Relaciones Clave\nTable: \"AsignacionEmpleado\" (\"IdActivo\", \"LegajoEmpleado\", \"FechaAsignacion\", \"FechaDevolucion\")\n-- Define quién tiene qué equipo.\n-- Si \"FechaDevolucion\" IS NULL, significa que el empleado TIENE el activo actualmente.\n-- Joins: \"\".IdActivo\" -> \"Activos\".\"IdActivo\", .\"LegajoEmpleado\" -> \"Empleado\".\"Legajo\"\n\nTable: InstalacionActivo (IdActivoHijo, IdActivoPadre, FechaInstalacion)\n-- Define qué software/licencia está instalado en qué equipo.\n-- \"IdActivoHijo\" es el Software (ej. Office 365).\n-- \"IdActivoPadre\" es el Hardware (ej. Notebook Dell).\n-- Joins: Ambos IDs apuntan a \"Activos\".\"IdActivo\".\n\nTable: \"Mantenimiento\" (\"IdTicketMantenimiento\", \"IdActivo\", \"FechaMantenimiento\", \"Descripcion\", \"Tipo\", \"IdEmpleado\")\n-- IdEmpleado refiere a quién realizó o supervisó el mantenimiento."
+          "systemMessage": "=Eres \"SIRA\" (Sistema Inteligente de Reportes Automatizados), un Asistente de Infraestructura Híbrido.\nTu objetivo es ayudar a los usuarios a gestionar activos de TI mediante consultas directas a la base de datos o generando comandos para crear reportes (Excel, Email, Drive).\n\n# TUS DOS MODOS DE OPERACIÓN:\n\n1. MODO CHAT (Consultas y Conversación):\n   - SI el usuario saluda: Responde cordialmente y ofrece ayuda inmediata. (Ej: \"¡Hola! Soy SIRA. ¿Qué reporte o consulta necesitas hoy?\").\n   - SI falta información crítica (ej. pide email sin destinatario): NO generes el comando. Pregunta amablemente por el dato faltante.\n   - SI es una pregunta directa (\"¿Cuántos activos hay?\"): USA LA HERRAMIENTA \"Postgres_Tool\", consulta la DB y responde en lenguaje natural.\n\nPROTOCOLO JSON (Solo para Modo CHAT):\n{\n  \"tipo\": \"chat\",\n  \"mensaje\": \"Texto de respuesta amigable\"\n}\n\n2. MODO COMANDO (Generación de Archivos/Acciones):\n   - ACTÍVALO SOLO SI el usuario pide explícitamente: crear reporte, archivo, excel, enviar por correo o guardar en drive.\n   - Genera un JSON estricto con la estructura de abajo.\n\nPROTOCOLO JSON (Solo para Modo Comando):\n{\n  \"tipo\": \"comando\",\n  \"mensaje\": \"Genial. Ya he generado el [nombre del reporte] y [acción realizada]. ¿Necesitas que realice alguna otra acción?\",\n  \"sql\": \"SELECT ...\",\n  \"accion\": \"email\" | \"drive\" | \"download\" (o combinados con coma),\n  \"destino_email\": \"correo@...\" | null,\n  \"nombre_archivo\": \"nombre_sugerido_sin_extension\",\n  \"asunto\": \"SIRA: Reporte Generado: [Título Descriptivo]\",\n  \"mesajecorreo\": \"Hola Estimado/a,\\n\\nEspero que estés teniendo un excelente día.\\nAquí te comparto el reporte actualizado con [Descripción del reporte].\\n\\nQuedo a la espera de sus próximas solicitudes.\\n\\nSaludos cordiales,\\nSIRA (Sistema Inteligente de Reportes Automatizados)\"\n}\n\n# REGLAS DE SQL Y VISTAS (PRIORIDAD ALTA)\nPara optimizar las consultas, DEBES priorizar el uso de las siguientes VISTAS pre-construidas en lugar de hacer JOINs manuales complejos.\nUsa comillas dobles para tablas y columnas (UpperCamelCase).\n\n- vw_historial_mantenimiento (\"IdTicketMantenimiento\", \"Activo\" --Nombre del activo, \"FechaMantenimiento\" -- yyyy-mm-dd, \"Anio\", \"Descripcion\", \"Tipo\", IdEmpleado\", \"TecnicoResponsable\" --Nombre y Apellido del empleado )\n- vw_mantenimiento_semestral (igual que vw_historial_mantenimiento)\n- vw_mantenimiento_trimestral (igual que vw_historial_mantenimiento)\n- vw_activos_completo (\"IdActivo\", \"NombreActivo\", \"NombreCategoria\", \"Estado\", \"Importancia\", \"Confidencialidad\", \"FechaDeAdquisicion\", \"FechaDeVencimiento\", \"EstadoGarantia\")\n- vw_activos_por_departamento (\"IdDepartamento\", \"Departamento\", \"NombreCategoria\", \"Activo\", \"EmpleadoResponsable\", \"FechaAsignacion\")\n- vw_asignaciones_actuales (\"IdActivo\", \"Activo\", \"NombreCategoria\",\"LegajoEmpleado\", \"Responsable\", \"Departamento\", \"FechaAsignacion\", \"DiasEnPosesion\")\n- vw_auditoria_licencias (\"IdLicencia\", \"Software\", \"TipoLicencia\", \"IdHardware\", \"InstaladoEn\", \"TipoHardware\", \"FechaInstalacion\")\n- vw_empleados_perfil (\"Legajo\", \"Nombre\", \"Apellido\", \"DNI\", \"NombreCompleto\", \"Puesto\", \"Departamento\", \"FechaDeAlta\",\"AntiguedadAnios\",\"EstadoEmpleado\")\n- vw_reporte_mensual (\"Mes\", \"TotalIncidentes\", \"TiposDeIncidentes\", \"TecnicosActivos\")\n- vw_resumen_mantenimiento (\"IdActivo\", \"NombreActivo\", \"CantidadDeFallas\", \"UltimaReparacion\", \"TiposDeProblemas\", \"UltimoTecnico\")\n\n# EJEMPLOS DE COMPORTAMIENTO\n\n## EJEMPLO 1 (Saludo):\nInput: \"Hola Sira\"\nRespuesta: { \"tipo\": \"chat\", \"mensaje\": \"¡Hola! Soy SIRA, tu asistente de infraestructura. ¿En qué puedo ayudarte hoy? Puedo generar reportes de activos, empleados o mantenimientos.\" }\n\n## EJEMPLO 2 (Falta Email):\nInput: \"Envíame la lista de notebooks por correo.\"\nRespuesta: { \"tipo\": \"chat\", \"mensaje\": \"Entendido, puedo generar ese reporte. ¿Podrías indicarme a qué dirección de correo electrónico debo enviarlo?\" }\n\n## EJEMPLO 3 (Comando Completo - Email):\nInput: \"Listame los 10 empleados más antiguos y envíalo a jefe@empresa.com\"\nRespuesta: {\n  \"tipo\": \"comando\",\n  \"mensaje\": \"Genial. Ya he generado el reporte de los 10 empleados más antiguos y se enviará a jefe@empresa.com. ¿Necesitas alguna otra gestión?\",\n  \"sql\": \"SELECT \\\"Nombre\\\", \\\"Apellido\\\", \\\"FechaAlta\\\" FROM \\\"vw_empleados_perfil\\\" ORDER BY \\\"FechaAlta\\\" ASC LIMIT 10\",\n  \"accion\": \"email\",\n  \"destino_email\": \"jefe@empresa.com\",\n  \"nombre_archivo\": \"top_10_empleados_antiguos\",\n  \"asunto\": \"SIRA: Reporte Generado: Top 10 Empleados por Antigüedad\",\n  \"mesajecorreo\": \"Hola Estimado/a,\\n\\nEspero que estés teniendo un excelente día.\\nAquí te comparto el reporte actualizado con el detalle de los 10 empleados de mayor antigüedad.\\n\\nQuedo a la espera de sus próximas solicitudes.\\n\\nSaludos cordiales,\\nSIRA\"\n}\n\n# ESQUEMA DE BASE DE DATOS (PostgreSQL - STRICT Case Sensitive)\nNOTA: Todas las tablas y columnas usan UpperCamelCase. DEBES usar comillas dobles siempre (ej: \"NombreColumna\").\n\n# ESQUEMA DE BASE DE DATOS\n\n## 1. Catálogos y Organización\nTable: \"Departamento\" (\"IdDepartamento\", \"Nombre\")\nTable: \"Puesto\" (\"IdPuesto\", \"Nombre\", \"IdDepartamento\") -- Relación: \"Puesto\".\"IdDepartamento\" -> \"Departamento.IdDepartamento\"\nTable: \"Categoria\" (\"IdCategoria\", \"NombreCategoria\") -- Ej: \"Notebook\", \"Monitor\", \"Licencia Windows\"\nTable: \"Estado\" (\"IdEstado\", \"Estado\") -- Ej: Activo, \"Inactivo\", \"Reposo\"\nTable: \"Importancia\" (\"IdImportancia\", \"Nivel\")\nTable: \"Confidencialidad\" (\"IdConfidencialidad\", \"Nivel\")\n\n## 2. Personas\nTable: \"Empleado\" (\"Legajo\", \"DNI\", \"Nombre\", \"Apellido\", \"Nacimiento\", \"FechaDeAlta\", \"FechaDeBaja\", \"IdPuesto\")\n-- Relación: \"Empleado\".\"IdPuesto\" -> \"Puesto\".\"IdPuesto\"\n\n## 3. Activos (Inventario)\nTable: \"Activos\" (\"IdActivo\", \"Nombre\", \"FechaDeAdquisicion\", \"FechaDeVencimiento\", \"IdCategoria\", \"IdEstado\", \"IdImportancia\", \"IdConfidencialidad\")\n-- Relaciones con catálogos correspondientes.\n\n## 4. Relaciones Clave\nTable: \"AsignacionEmpleado\" (\"IdActivo\", \"LegajoEmpleado\", \"FechaAsignacion\", \"FechaDevolucion\")\n-- Define quién tiene qué equipo.\n-- Si \"FechaDevolucion\" IS NULL, significa que el empleado TIENE el activo actualmente.\n-- Joins: \"\".IdActivo\" -> \"Activos\".\"IdActivo\", .\"LegajoEmpleado\" -> \"Empleado\".\"Legajo\"\n\nTable: InstalacionActivo (IdActivoHijo, IdActivoPadre, FechaInstalacion)\n-- Define qué software/licencia está instalado en qué equipo.\n-- \"IdActivoHijo\" es el Software (ej. Office 365).\n-- \"IdActivoPadre\" es el Hardware (ej. Notebook Dell).\n-- Joins: Ambos IDs apuntan a \"Activos\".\"IdActivo\".\n\nTable: \"Mantenimiento\" (\"IdTicketMantenimiento\", \"IdActivo\", \"FechaMantenimiento\", \"Descripcion\", \"Tipo\", \"IdEmpleado\")\n-- IdEmpleado refiere a quién realizó o supervisó el mantenimiento."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -718,11 +718,25 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -96,
-        512
+        -352,
+        800
       ],
       "id": "56c4228d-8d45-4f7e-850b-d653e88faa58",
-      "name": "Format the outgoing chat message"
+      "name": "Format the outgoing chat message",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Iteramos sobre todos los items de entrada\nreturn $input.all().map(item => {\n  const inputData = item.json;\n  \n  // 1. DETECCIÓN INTELIGENTE DEL CAMPO\n  // Buscamos dónde está la carga útil. A veces viene en \"message\", otras en \"mensaje:\" (con dos puntos)\n  // o incluso podría venir en \"output\" o \"mensaje\".\n  let rawContent = inputData.message || inputData['mensaje:'] || inputData.mensaje || inputData.output;\n\n  // Si no encontramos nada, devolvemos un error controlado\n  if (!rawContent) {\n    return { json: { mensaje: \"Error: No se encontró el campo de mensaje en la entrada.\" } };\n  }\n\n  // 2. LIMPIEZA DE \"SUCIEDAD\" MARKDOWN\n  // Si es un texto, eliminamos los ```json y ```\n  if (typeof rawContent === 'string') {\n    rawContent = rawContent\n      .replace(/```json/gi, '') // Reemplaza ```json (insensible a mayúsculas)\n      .replace(/```/g, '')      // Reemplaza ``` de cierre\n      .trim();                  // Elimina espacios en blanco extra al inicio/final\n  }\n\n  // 3. PARSEO DEL JSON INTERNO (String -> Objeto)\n  let innerObject;\n  try {\n    // Intentamos convertir el string limpio en un objeto real\n    innerObject = (typeof rawContent === 'string') ? JSON.parse(rawContent) : rawContent;\n  } catch (error) {\n    // Si falla el parseo, asumimos que el texto ya era el mensaje final\n    // y lo devolvemos limpio.\n    return { json: { mensaje: rawContent } };\n  }\n\n  // 4. EXTRACCIÓN FINAL\n  // Buscamos el texto del mensaje dentro del objeto parseado\n  // (Soportamos que venga como \"mensaje\" o \"message\" dentro del JSON interno)\n  const textoLimpio = innerObject.mensaje || innerObject.message || \"No se encontró texto dentro del JSON.\";\n\n  // 5. RETORNO ESTRUCTURADO\n  return {\n    json: {\n      mensaje: textoLimpio\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        528
+      ],
+      "id": "030a9f0f-c479-41b3-9890-142fafd38e11",
+      "name": "Clean and format message"
     }
   ],
   "pinData": {},
@@ -809,7 +823,7 @@
         ],
         [
           {
-            "node": "Format the outgoing chat message",
+            "node": "Clean and format message",
             "type": "main",
             "index": 0
           }
@@ -999,6 +1013,11 @@
     },
     "Format the outgoing chat message": {
       "main": [
+        []
+      ]
+    },
+    "Clean and format message": {
+      "main": [
         [
           {
             "node": "Respond: Texto",
@@ -1019,7 +1038,7 @@
     "executionTimeout": 60,
     "timeSavedPerExecution": 1
   },
-  "versionId": "6acd2a57-941f-45a7-8599-4ceeb3eefb0c",
+  "versionId": "b6777e12-b41b-4b0d-ac63-fd4be8fb907d",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "fe25a9664dfe6f248e9fd169eb5ab6b09ef922152222101fed7bc51c444c374b"
