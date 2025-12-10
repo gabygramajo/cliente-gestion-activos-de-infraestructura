@@ -1,0 +1,1 @@
+INSERT INTO "public"."Confidencialidad" ("IdConfidencialidad", "Nivel") VALUES ('1', 'Público'), ('2', 'Reservado'), ('3', 'Confidencial');

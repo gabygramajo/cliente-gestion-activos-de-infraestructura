@@ -1,0 +1,1 @@
+INSERT INTO "public"."Categoria" ("IdCategoria", "NombreCategoria") VALUES ('1', 'Notebook'), ('2', 'Servidor'), ('3', 'Router'), ('4', 'Switch'), ('5', 'Licencia SO'), ('6', 'Licencia SaaS'), ('7', 'Monitor'), ('8', 'Periférico'), ('9', 'Documentación'), ('10', 'Impresora');

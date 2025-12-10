@@ -1,0 +1,1 @@
+INSERT INTO "public"."Departamento" ("IdDepartamento", "Nombre") VALUES ('1', 'Dirección'), ('2', 'Tecnología (IT)'), ('3', 'Operaciones'), ('4', 'Desarrollo'), ('5', 'RRHH'), ('6', 'Finanzas');

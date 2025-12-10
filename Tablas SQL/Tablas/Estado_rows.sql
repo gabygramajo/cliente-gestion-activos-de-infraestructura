@@ -1,0 +1,1 @@
+INSERT INTO "public"."Estado" ("IdEstado", "Estado") VALUES ('1', 'Activo'), ('2', 'Inactivo'), ('3', 'Reposo');
