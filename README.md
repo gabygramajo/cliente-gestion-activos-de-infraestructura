@@ -1,113 +1,159 @@
-# 🤖 Agente Inteligente para Gestión de Activos de Infraestructura
+<div align="center">
 
-## 📋 Descripción del Proyecto
+  <h1>🤖 InfraQuery</h1>
+  <h3>Gestión Inteligente de Activos de Infraestructura con IA</h3>
 
-Sistema inteligente que permite consultar información sobre los activos de infraestructura de una empresa utilizando lenguaje natural, combinando base de datos, automatización con n8n e inteligencia artificial con un agente smart conectado a Python.
+  <p>
+    <b>Orquestado por SIRA (Sistema Inteligente de Reportes Automatizados)</b>
+    <br>
+    <i>Olvídate del SQL. Gestiona tu infraestructura conversando.</i>
+  </p>
 
+  <p>
+    <img src="https://img.shields.io/badge/Python-Client-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+    <img src="https://img.shields.io/badge/n8n-Automation-EA4B71?style=for-the-badge&logo=n8n&logoColor=white" />
+    <img src="https://img.shields.io/badge/Gemini-AI_Model-8E75B2?style=for-the-badge&logo=google-gemini&logoColor=white" />
+    <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" />
+  </p>
 
----
+  <br>
 
-## 🛠️  Arquitectura y Stack Tecnológico
-
-Implementa un flujo de datos que desacopla la lógica del negocio de la consulta de datos, orquestado por n8n.
-
-![Arquitectura del proyecto](https://i.postimg.cc/8PtmpN12/Flujo-general.png)
-
----
-
-## 🔄 Flujo general del Proyecto
-
-1.  👤 **Usuario:** Escribe una petición en lenguaje natural en una consola de Python.
-
-2.  🐍 **Python:** Envía esta petición a un Webhook de n8n vía HTTP REST.
-
-3.  🌐 **n8n:** Recibe la petición y utiliza el nodo de **Gemini** (AI Agent) para interpretar la solicitud.
-
-4.  🤖 **IA (Gemini):** Analiza la petición y la transforma en una consulta SQL dinámica y estructurada.
-
-5.  🌐 **n8n:** Ejecuta la consulta SQL en la base de datos (Supabase).
-
-6.  🗄️ **Base de Datos:** Devuelve los datos a n8n.
-
-7.  🌐 **n8n:** Procesa la respuesta y ejecuta la acción solicitada por el usuario:
-    * Devolver una respuesta simple a la consola.
-    * Generar un archivo **Excel/CSV**.
-    * Enviar un reporte por **Email**.
-    * Guardar el archivo en **Google Drive**.
+  <a href="https://youtu.be/el5TBkMsraw?si=bHLHujUZQkABrxKI">
+    <img src="https://img.shields.io/badge/▶_Ver_Demo_en_YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" height="40"/>
+  </a>
+  <a href="https://leeward-bassoon-757.notion.site/Grupo-5-Gesti-n-de-Activos-de-Infraestructura-4af9d54df79e4b33842aa6d64f7d7298">
+    <img src="https://img.shields.io/badge/Notion-Ver_Documentación-000000?style=for-the-badge&logo=notion&logoColor=white" height="40"/>
+  </a>
+</div>
 
 ---
 
-## 🗄️ Base de Datos
+## 📖 Sobre el Proyecto
 
-Modelo relacional optimizado para consultas empresariales sobre infraestructura. Incluye tablas de:
+**InfraQuery** es una solución "End-to-End" impulsada por Inteligencia Artificial y Automatización que revoluciona la forma en que los departamentos de TI gestionan sus activos. Permite consultar, gestionar y reportar sobre el inventario de infraestructura utilizando **lenguaje natural**, eliminando la necesidad de conocimientos avanzados en SQL o procesos manuales tediosos.
 
-- Activo
-- Categoria
-- Importancia
-- Confidencialidad
-- Empleado
-- Puesto
-- Mantenimiento
-- AsignacionActivo
-  
-📌 Diseño normalizado → permite consultas complejas interpretadas por la IA.
+El corazón del sistema es **SIRA**, un agente inteligente amigable que interpreta tus necesidades y ejecuta tareas complejas en segundos.
 
-![Base](https://i.postimg.cc/wT0Qqg6P/Data-Base.png)
+### 🎯 El Problema
+Los equipos de IT suelen enfrentarse a:
+* ❌ Inventarios desactualizados o dispersos en múltiples Excel.
+* ❌ Falta de trazabilidad en mantenimientos y licencias.
+* ❌ Dependencia de expertos en bases de datos para reportes simples.
+* ❌ Tiempos de respuesta lentos ante auditorías.
 
----
-
-## 🔄 Flujo n8n
-
-El flujo está compuesto por:
-- ✔ Webhook (entrada desde Python)
-- ✔ AI Agent (Gemini) para generar SQL
-- ✔ PostgreSQL Query
-- ✔ Convert to Excel (XLSX)
-- ✔ Gmail (API) para envío automático
-- ✔ Google Drive Upload
-- ✔ Respond to Webhook (retorno a Python)
-  
-![FlujoN8N](https://i.postimg.cc/Pr2QXTXG/Flujo-de-n8n.png)
+### ✅ La Solución InfraQuery
+* **Lenguaje Natural:** Pídele lo que necesitas como si hablaras con un colega.
+* **Datos en Tiempo Real:** Conexión directa a una base de datos PostgreSQL robusta.
+* **Acciones Automáticas:** Generación de Excel, envío por Email y respaldo en Google Drive en un solo flujo.
+* **Eficiencia:** Reduce tareas de horas a minutos.
 
 ---
 
-## 🚀 Cómo Empezar
+## 🏗️ Arquitectura y Stack Tecnológico
 
-### 1. Clonar el Repositorio
+El sistema utiliza una arquitectura desacoplada donde el cliente (Python) se comunica con el cerebro (n8n + IA) a través de Webhooks.
 
-```bash
-git clone [URL-DEL-REPOSITORIO]
-```
+<div align="center">
+  <img src="./assets/arquitectura.png" alt="Arquitectura InfraQuery" width="800"/>
+</div>
 
-### 2. Crear .env
-
-Incluir:
-
-```bash
-WEBHOOK_PRODUCTION= url_del_webhook_de_n8n
-WEBHOOK_USER= usuario
-WEBHOOK_PASS= password
-```
-
-### 3. Instalar dependencias
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Ejecutar
-
-```bash
-python main.py
-```
+### Tecnologías Clave:
+* **🐍 Python (Cliente):** Interfaz de terminal ligera, escalable y multiplataforma. Se encarga de capturar el input del usuario y gestionar la recepción de archivos binarios (Excel) o respuestas de texto.
+* **⚡ n8n (Orquestador):** El motor de automatización visual. Gestiona el flujo lógico, conecta los servicios y maneja los errores. Destaca por su robustez y bajo costo.
+* **🧠 Google Gemini (IA):** El "cerebro" de SIRA. Convierte peticiones en lenguaje natural a consultas SQL seguras (Text-to-SQL) y da personalidad al asistente.
+* **🐘 PostgreSQL @ Supabase:** Base de datos relacional estándar empresarial. Garantiza integridad, seguridad y alto rendimiento.
 
 ---
 
-## ✨ Ejemplos de Consultas
+## ⚙️ Flujo de Trabajo (n8n Workflow)
 
-El sistema es capaz de interpretar una variedad de solicitudes en lenguaje natural, como:
+Toda la magia sucede en un flujo complejo de **n8n** que integra Agentes de IA con herramientas tradicionales.
 
-1. 📋 **Consulta normal (texto):** Mostrame un listado de los primeros 10 empleados.
-2. ✅ **Generar Excel:** Generá un Excel con los nombres de los empleados y sus puestos.
-3. 📧 **Enviar reporte por Gmail:**  Quiero que mandes un mail con los datos de todas las marcas y modelos de notebooks, junto al legajo y nombre del responsable a cargo. 📬 Correo: xxx@yyy.com
-4. 📁 **Subir reporte a Google Drive:** Guardar en Google Drive una planilla con la base de conocimientos de cada servicio.
+<div align="center">
+  <img src="./assets/n8n-flow.png" alt="n8n Workflow" width="800"/>
+</div>
+
+1.  **Entrada y Normalización:** Recepción del mensaje vía Webhook y unificación de formatos.
+2.  **Núcleo de IA (SIRA):**
+    * Utiliza `Google Gemini Chat Model`.
+    * Tiene acceso a herramientas (`Postgres_Tool`) para consultas rápidas.
+    * Mantiene memoria de la conversación (`Window Buffer Memory`).
+3.  **Enrutador Inteligente:** Un `JSON Parser` determina si la IA quiere "Conversar" (Chat) o "Ejecutar una Acción" (Comando).
+4.  **Ejecución de Comandos:**
+    * Generación de SQL dinámico.
+    * Conversión de resultados a binario `.xlsx`.
+5.  **Acciones Paralelas:**
+    * 📤 **Email:** Envío del reporte adjunto vía Gmail.
+    * ☁️ **Drive:** Carga automática a Google Drive.
+    * ⬇️ **Download:** Retorno del archivo al cliente Python para descarga local.
+
+---
+
+## 🗄️ Modelo de Datos
+
+El sistema se apoya en una base de datos relacional sólida diseñada para la integridad de los activos.
+
+<div align="center">
+  <img src="./assets/db-schema.png" alt="Diagrama Entidad Relación" width="800"/>
+</div>
+
+### Tablas Principales:
+* **Activos:** El núcleo del inventario (Hardware, Software).
+* **Ciclo de Vida:** Tablas de `AsignacionEmpleado`, `InstalaciónActivo` y `Mantenimiento` para trazabilidad completa.
+* **Organización:** `Empleado`, `Departamento`, `Puesto`.
+
+> **🚀 Optimización:** SIRA utiliza Vistas SQL pre-construidas (ej: `vw_licencias_por_vencer`, `vw_equipos_poca_vida_util`) para facilitar consultas complejas y reducir el margen de error de la IA.
+
+---
+
+## 💬 Ejemplos de Uso
+
+Interactuar con **SIRA** es tan simple como escribir en tu terminal:
+
+### 1. Conversación y Consultas Rápidas
+> **Usuario:** *"Hola Sira, ¿cuántos activos tenemos en total?"*
+>
+> **🤖 SIRA:** *"¡Hola! Actualmente tenemos registrados **142 activos** en la base de datos, clasificados entre Hardware y Licencias."*
+
+### 2. Generación de Reportes y Automatización
+> **Usuario:** *"Necesito una lista de todas las licencias que vencen este mes. Por favor envíala por correo a jefe@empresa.com y guárdala en el Drive."*
+>
+> **🤖 SIRA:** *"¡Entendido! He generado el reporte `licencias_vencimiento_oct.xlsx`.
+> ✅ Enviado a jefe@empresa.com
+> ✅ Guardado en Google Drive
+> ¿Necesitas algo más?"*
+
+---
+
+## 🚀 Instalación y Ejecución (Cliente Python)
+<div align="center">
+  <img src="./assets/python-console.png" alt="n8n Workflow" width="800"/>
+</div>
+
+1.  **Clonar el repositorio:**
+    ```bash
+    git clone https://github.com/lunilop/cliente-gestion-activos-de-infraestructura.git
+
+    cd cliente-gestion-activos-de-infraestructura
+    ```
+
+2.  **Instalar dependencias:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+    *(Librerías principales: `requests`, `pandas`, `python-dotenv`, `prettytable`, `colorama`)*
+
+3.  **Configurar entorno:**
+    Crea un archivo `.env` con las credenciales de tu webhook de n8n:
+    ```env
+    WEBHOOK_PRODUCTION=tu_url_del_webhook
+    WEBHOOK_USER=tu_usuario
+    WEBHOOK_PASS=tu_contraseña
+    ```
+
+4.  **Iniciar SIRA:**
+    ```bash
+    python main.py
+    ```
+
+---
