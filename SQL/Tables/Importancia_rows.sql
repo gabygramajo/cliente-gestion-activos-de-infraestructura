@@ -1,0 +1,1 @@
+INSERT INTO "public"."Importancia" ("IdImportancia", "Nivel") VALUES ('1', 'Baja'), ('2', 'Media'), ('3', 'Alta'), ('4', 'Crítica');
